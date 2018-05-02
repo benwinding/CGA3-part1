@@ -7,14 +7,8 @@ GL_LIBS = `pkg-config --static --libs glfw3 glew`
 EXT = 
 CPPFLAGS = `pkg-config --cflags glfw3` -std=c++11 -Iinclude
 
-# Any other platform specific libraries here...
-ifneq (, $(findstring MINGW, $(PLATFORM)))
-    GL_LIBS = `pkg-config --static --libs glfw3 glew freeglut`
-    EXT = .exe
-endif
-
 CC = g++
-EXE = assign3_part1
+EXE = viewer
 OUT_DIR = out/
 SRC_DIR = src/
 
