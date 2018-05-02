@@ -36,6 +36,9 @@ typedef struct {
 
 std::vector<DrawObject> gDrawObjects;
 
+float curr_quat[4];
+float prev_quat[4];
+
 int width = 768;
 int height = 768;
 
@@ -43,34 +46,33 @@ double prevMouseX, prevMouseY;
 bool mouseLeftPressed;
 bool mouseMiddlePressed;
 bool mouseRightPressed;
-float curr_quat[4];
-float prev_quat[4];
+
 glm::vec3 eye, lookat, up;
 
 GLFWwindow* window;
 
-static void CalcNormal(float N[3], float v0[3], float v1[3], float v2[3]) {
-  float v10[3];
-  v10[0] = v1[0] - v0[0];
-  v10[1] = v1[1] - v0[1];
-  v10[2] = v1[2] - v0[2];
+static void CalcNormal(glm::vec3 N, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2) {
+  glm::vec3 v10;
+  v10.x = v1.x - v0.x;
+  v10.y = v1.y - v0.y;
+  v10.z = v1.z - v0.z;
 
-  float v20[3];
-  v20[0] = v2[0] - v0[0];
-  v20[1] = v2[1] - v0[1];
-  v20[2] = v2[2] - v0[2];
+  glm::vec3 v20;
+  v20.x = v2.x - v0.x;
+  v20.y = v2.y - v0.y;
+  v20.z = v2.z - v0.z;
 
-  N[0] = v20[1] * v10[2] - v20[2] * v10[1];
-  N[1] = v20[2] * v10[0] - v20[0] * v10[2];
-  N[2] = v20[0] * v10[1] - v20[1] * v10[0];
+  N.x = v20.y * v10.z - v20.z * v10.y;
+  N.y = v20.z * v10.x - v20.x * v10.z;
+  N.z = v20.x * v10.y - v20.y * v10.x;
 
-  float len2 = N[0] * N[0] + N[1] * N[1] + N[2] * N[2];
+  float len2 = N.x * N.x + N.y * N.y + N.z * N.z;
   if (len2 > 0.0f) {
     float len = sqrtf(len2);
 
-    N[0] /= len;
-    N[1] /= len;
-    N[2] /= len;
+    N.x /= len;
+    N.y /= len;
+    N.z /= len;
   }
 }
 
@@ -112,7 +114,7 @@ void computeSmoothingNormals(const tinyobj::attrib_t& attrib, const tinyobj::sha
 
     // Get the three vertex indexes and coordinates
     int vi[3];      // indexes
-    float v[3][3];  // coordinates
+    glm::vec3 v[3];  // coordinates
 
     for (int k = 0; k < 3; k++) {
       vi[0] = idx0.vertex_index;
@@ -128,7 +130,7 @@ void computeSmoothingNormals(const tinyobj::attrib_t& attrib, const tinyobj::sha
     }
 
     // Compute the normal of the face
-    float normal[3];
+    glm::vec3 normal;
     CalcNormal(normal, v[0], v[1], v[2]);
 
     // Add the normal to the three vertexes
@@ -284,21 +286,21 @@ static bool LoadObjAndConvert(float bmin[3], float bmax[3],
         //    std::endl;
         //}
         //
-        float diffuse[3];
+        glm::vec3 diffuse;
         for (size_t i = 0; i < 3; i++) {
           diffuse[i] = materials[current_material_id].diffuse[i];
         }
-        float tc[3][2];
+        glm::vec2 tc[3];
         if (attrib.texcoords.size() > 0) {
           if ((idx0.texcoord_index < 0) || (idx1.texcoord_index < 0) ||
               (idx2.texcoord_index < 0)) {
             // face does not contain valid uv index.
-            tc[0][0] = 0.0f;
-            tc[0][1] = 0.0f;
-            tc[1][0] = 0.0f;
-            tc[1][1] = 0.0f;
-            tc[2][0] = 0.0f;
-            tc[2][1] = 0.0f;
+            tc[0].x = 0.0f;
+            tc[0].y = 0.0f;
+            tc[1].x = 0.0f;
+            tc[1].y = 0.0f;
+            tc[2].x = 0.0f;
+            tc[2].y = 0.0f;
           } else {
             assert(attrib.texcoords.size() >
                    size_t(2 * idx0.texcoord_index + 1));
@@ -308,23 +310,23 @@ static bool LoadObjAndConvert(float bmin[3], float bmax[3],
                    size_t(2 * idx2.texcoord_index + 1));
 
             // Flip Y coord.
-            tc[0][0] = attrib.texcoords[2 * idx0.texcoord_index];
-            tc[0][1] = 1.0f - attrib.texcoords[2 * idx0.texcoord_index + 1];
-            tc[1][0] = attrib.texcoords[2 * idx1.texcoord_index];
-            tc[1][1] = 1.0f - attrib.texcoords[2 * idx1.texcoord_index + 1];
-            tc[2][0] = attrib.texcoords[2 * idx2.texcoord_index];
-            tc[2][1] = 1.0f - attrib.texcoords[2 * idx2.texcoord_index + 1];
+            tc[0].x = attrib.texcoords[2 * idx0.texcoord_index];
+            tc[0].y = 1.0f - attrib.texcoords[2 * idx0.texcoord_index + 1];
+            tc[1].x = attrib.texcoords[2 * idx1.texcoord_index];
+            tc[1].y = 1.0f - attrib.texcoords[2 * idx1.texcoord_index + 1];
+            tc[2].x = attrib.texcoords[2 * idx2.texcoord_index];
+            tc[2].y = 1.0f - attrib.texcoords[2 * idx2.texcoord_index + 1];
           }
         } else {
-          tc[0][0] = 0.0f;
-          tc[0][1] = 0.0f;
-          tc[1][0] = 0.0f;
-          tc[1][1] = 0.0f;
-          tc[2][0] = 0.0f;
-          tc[2][1] = 0.0f;
+          tc[0].x = 0.0f;
+          tc[0].y = 0.0f;
+          tc[1].x = 0.0f;
+          tc[1].y = 0.0f;
+          tc[2].x = 0.0f;
+          tc[2].y = 0.0f;
         }
 
-        float v[3][3];
+        glm::vec3 v[3];
         for (int k = 0; k < 3; k++) {
           int f0 = idx0.vertex_index;
           int f1 = idx1.vertex_index;
@@ -344,7 +346,7 @@ static bool LoadObjAndConvert(float bmin[3], float bmax[3],
           bmax[k] = std::max(v[2][k], bmax[k]);
         }
 
-        float n[3][3];
+        glm::vec3 n[3];
         {
           bool invalid_normal_index = false;
           if (attrib.normals.size() > 0) {
@@ -686,7 +688,9 @@ int main(int argc, char** argv) {
 
   reshapeFunc(window, width, height);
 
-  float bmin[3], bmax[3];
+  float bmin[3];
+  float bmax[3];
+
   std::vector<tinyobj::material_t> materials;
   std::map<std::string, GLuint> textures;
   if (false == LoadObjAndConvert(bmin, bmax, &gDrawObjects, materials, textures,
@@ -701,6 +705,9 @@ int main(int argc, char** argv) {
   if (maxExtent < 0.5f * (bmax[2] - bmin[2])) {
     maxExtent = 0.5f * (bmax[2] - bmin[2]);
   }
+
+  printf("bmin = %f, %f, %f\n", bmin[0], bmin[1], bmin[2]);
+  printf("bmax = %f, %f, %f\n", bmax[0], bmax[1], bmax[2]);
 
   while (glfwWindowShouldClose(window) == GL_FALSE) {
     glfwPollEvents();
