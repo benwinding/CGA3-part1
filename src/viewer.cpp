@@ -20,6 +20,7 @@
 
 #include "tiny_obj_loader.cc"
 
+#include "utils.h"
 #include "trackball.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -45,25 +46,6 @@ float prev_quat[4];
 float eye[3], lookat[3], up[3];
 
 GLFWwindow* window;
-
-static std::string GetBaseDir(const std::string& filepath) {
-  if (filepath.find_last_of("/\\") != std::string::npos)
-    return filepath.substr(0, filepath.find_last_of("/\\"));
-  return "";
-}
-
-static bool FileExists(const std::string& abs_filename) {
-  bool ret;
-  FILE* fp = fopen(abs_filename.c_str(), "rb");
-  if (fp) {
-    ret = true;
-    fclose(fp);
-  } else {
-    ret = false;
-  }
-
-  return ret;
-}
 
 static void CheckErrors(std::string desc) {
   GLenum e = glGetError();
@@ -197,7 +179,7 @@ static bool LoadObjAndConvert(float bmin[3], float bmax[3],
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
 
-  std::string base_dir = GetBaseDir(filename);
+  std::string base_dir = utils::GetBaseDir(filename);
   if (base_dir.empty()) {
     base_dir = ".";
   }
@@ -241,10 +223,10 @@ static bool LoadObjAndConvert(float bmin[3], float bmax[3],
           int comp;
 
           std::string texture_filename = mp->diffuse_texname;
-          if (!FileExists(texture_filename)) {
+          if (!utils::FileExists(texture_filename)) {
             // Append base dir.
             texture_filename = base_dir + mp->diffuse_texname;
-            if (!FileExists(texture_filename)) {
+            if (!utils::FileExists(texture_filename)) {
               std::cerr << "Unable to find file: " << mp->diffuse_texname
                         << std::endl;
               exit(1);
