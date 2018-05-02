@@ -14,8 +14,6 @@
 
 #include <GL/glew.h>
 
-#include <GL/glu.h>
-
 class utils
 {
 public:

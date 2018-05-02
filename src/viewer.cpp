@@ -13,10 +13,12 @@
 #include <vector>
 
 #include <GL/glew.h>
-
-#include <GL/glu.h>
-
 #include <GLFW/glfw3.h>
+
+#include "glm/gtx/string_cast.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include "tiny_obj_loader.cc"
 
@@ -43,7 +45,7 @@ bool mouseMiddlePressed;
 bool mouseRightPressed;
 float curr_quat[4];
 float prev_quat[4];
-float eye[3], lookat[3], up[3];
+glm::vec3 eye, lookat, up;
 
 GLFWwindow* window;
 
@@ -74,23 +76,15 @@ static void CalcNormal(float N[3], float v0[3], float v1[3], float v2[3]) {
 
 namespace  // Local utility functions
 {
-struct vec3 {
-  float v[3];
-  vec3() {
-    v[0] = 0.0f;
-    v[1] = 0.0f;
-    v[2] = 0.0f;
-  }
-};
 
-void normalizeVector(vec3 &v) {
-  float len2 = v.v[0] * v.v[0] + v.v[1] * v.v[1] + v.v[2] * v.v[2];
+void normalizeVector(glm::vec3 &v) {
+  float len2 = v.x * v.x + v.y * v.y + v.z * v.z;
   if (len2 > 0.0f) {
     float len = sqrtf(len2);
 
-    v.v[0] /= len;
-    v.v[1] /= len;
-    v.v[2] /= len;
+    v.x /= len;
+    v.y /= len;
+    v.z /= len;
   }
 }
 
@@ -106,9 +100,9 @@ bool hasSmoothingGroup(const tinyobj::shape_t& shape)
 }
 
 void computeSmoothingNormals(const tinyobj::attrib_t& attrib, const tinyobj::shape_t& shape,
-                             std::map<int, vec3>& smoothVertexNormals) {
+                             std::map<int, glm::vec3>& smoothVertexNormals) {
   smoothVertexNormals.clear();
-  std::map<int, vec3>::iterator iter;
+  std::map<int, glm::vec3>::iterator iter;
 
   for (size_t f = 0; f < shape.mesh.indices.size() / 3; f++) {
     // Get the three indexes of the face (all faces are triangular)
@@ -142,13 +136,13 @@ void computeSmoothingNormals(const tinyobj::attrib_t& attrib, const tinyobj::sha
       iter = smoothVertexNormals.find(vi[i]);
       if (iter != smoothVertexNormals.end()) {
         // add
-        iter->second.v[0] += normal[0];
-        iter->second.v[1] += normal[1];
-        iter->second.v[2] += normal[2];
+        iter->second.x += normal[0];
+        iter->second.y += normal[1];
+        iter->second.z += normal[2];
       } else {
-        smoothVertexNormals[vi[i]].v[0] = normal[0];
-        smoothVertexNormals[vi[i]].v[1] = normal[1];
-        smoothVertexNormals[vi[i]].v[2] = normal[2];
+        smoothVertexNormals[vi[i]].x = normal[0];
+        smoothVertexNormals[vi[i]].y = normal[1];
+        smoothVertexNormals[vi[i]].z = normal[2];
       }
     }
 
@@ -265,7 +259,7 @@ static bool LoadObjAndConvert(float bmin[3], float bmax[3],
       std::vector<float> buffer;  // pos(3float), normal(3float), color(3float)
 
       // Check for smoothing group and compute smoothing normals
-      std::map<int, vec3> smoothVertexNormals;
+      std::map<int, glm::vec3> smoothVertexNormals;
       if (hasSmoothingGroup(shapes[s]) > 0) {
         std::cout << "Compute smoothingNormal for shape [" << s << "]" << std::endl;
         computeSmoothingNormals(attrib, shapes[s], smoothVertexNormals);
@@ -382,17 +376,17 @@ static bool LoadObjAndConvert(float bmin[3], float bmax[3],
             int f2 = idx2.vertex_index;
 
             if (f0 >= 0 && f1 >= 0 && f2 >= 0) {
-              n[0][0] = smoothVertexNormals[f0].v[0];
-              n[0][1] = smoothVertexNormals[f0].v[1];
-              n[0][2] = smoothVertexNormals[f0].v[2];
+              n[0][0] = smoothVertexNormals[f0].x;
+              n[0][1] = smoothVertexNormals[f0].y;
+              n[0][2] = smoothVertexNormals[f0].z;
 
-              n[1][0] = smoothVertexNormals[f1].v[0];
-              n[1][1] = smoothVertexNormals[f1].v[1];
-              n[1][2] = smoothVertexNormals[f1].v[2];
+              n[1][0] = smoothVertexNormals[f1].x;
+              n[1][1] = smoothVertexNormals[f1].y;
+              n[1][2] = smoothVertexNormals[f1].z;
 
-              n[2][0] = smoothVertexNormals[f2].v[0];
-              n[2][1] = smoothVertexNormals[f2].v[1];
-              n[2][2] = smoothVertexNormals[f2].v[2];
+              n[2][0] = smoothVertexNormals[f2].x;
+              n[2][1] = smoothVertexNormals[f2].y;
+              n[2][2] = smoothVertexNormals[f2].z;
 
               invalid_normal_index = false;
             }
@@ -483,7 +477,7 @@ static void reshapeFunc(GLFWwindow* window, int w, int h) {
   glViewport(0, 0, fb_w, fb_h);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(45.0, (float)w / (float)h, 0.01f, 100.0f);
+  glm::perspective(glm::radians(45.f), (float)w / (float)h, 0.01f, 100.0f);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
@@ -560,13 +554,13 @@ static void motionFunc(GLFWwindow* window, double mouse_x, double mouse_y) {
 
     add_quats(prev_quat, curr_quat, curr_quat);
   } else if (mouseMiddlePressed) {
-    eye[0] -= transScale * (mouse_x - prevMouseX) / (float)width;
-    lookat[0] -= transScale * (mouse_x - prevMouseX) / (float)width;
-    eye[1] += transScale * (mouse_y - prevMouseY) / (float)height;
-    lookat[1] += transScale * (mouse_y - prevMouseY) / (float)height;
+    eye.x -= transScale * (mouse_x - prevMouseX) / (float)width;
+    lookat.x -= transScale * (mouse_x - prevMouseX) / (float)width;
+    eye.y += transScale * (mouse_y - prevMouseY) / (float)height;
+    lookat.y += transScale * (mouse_y - prevMouseY) / (float)height;
   } else if (mouseRightPressed) {
-    eye[2] += transScale * (mouse_y - prevMouseY) / (float)height;
-    lookat[2] += transScale * (mouse_y - prevMouseY) / (float)height;
+    eye.z += transScale * (mouse_y - prevMouseY) / (float)height;
+    lookat.z += transScale * (mouse_y - prevMouseY) / (float)height;
   }
 
   // Update mouse point
@@ -642,17 +636,17 @@ static void Draw(const std::vector<DrawObject>& drawObjects,
 static void Init() {
   trackball(curr_quat, 0, 0, 0, 0);
 
-  eye[0] = 0.0f;
-  eye[1] = 0.0f;
-  eye[2] = 3.0f;
+  eye.x = 0.0f;
+  eye.y = 0.0f;
+  eye.z = 3.0f;
 
-  lookat[0] = 0.0f;
-  lookat[1] = 0.0f;
-  lookat[2] = 0.0f;
+  lookat.x = 0.0f;
+  lookat.y = 0.0f;
+  lookat.z = 0.0f;
 
-  up[0] = 0.0f;
-  up[1] = 1.0f;
-  up[2] = 0.0f;
+  up.x = 0.0f;
+  up.y = 1.0f;
+  up.z = 0.0f;
 }
 
 int main(int argc, char** argv) {
@@ -720,8 +714,7 @@ int main(int argc, char** argv) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     GLfloat mat[4][4];
-    gluLookAt(eye[0], eye[1], eye[2], lookat[0], lookat[1], lookat[2], up[0],
-              up[1], up[2]);
+    glm::lookAt(eye, lookat, up);
     build_rotmatrix(mat, curr_quat);
     glMultMatrixf(&mat[0][0]);
 
