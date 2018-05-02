@@ -18,3 +18,12 @@ bool utils::FileExists(const std::string& abs_filename) {
 
   return ret;
 }
+
+void utils::CheckErrors(std::string desc) {
+  GLenum e = glGetError();
+  if (e != GL_NO_ERROR) {
+    fprintf(stderr, "OpenGL error in \"%s\": %d (%d)\n", desc.c_str(), e, e);
+    exit(20);
+  }
+}
+

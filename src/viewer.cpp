@@ -47,14 +47,6 @@ float eye[3], lookat[3], up[3];
 
 GLFWwindow* window;
 
-static void CheckErrors(std::string desc) {
-  GLenum e = glGetError();
-  if (e != GL_NO_ERROR) {
-    fprintf(stderr, "OpenGL error in \"%s\": %d (%d)\n", desc.c_str(), e, e);
-    exit(20);
-  }
-}
-
 static void CalcNormal(float N[3], float v0[3], float v1[3], float v2[3]) {
   float v10[3];
   v10[0] = v1[0] - v0[0];
@@ -616,7 +608,7 @@ static void Draw(const std::vector<DrawObject>& drawObjects,
     glTexCoordPointer(2, GL_FLOAT, stride, (const void*)(sizeof(float) * 9));
 
     glDrawArrays(GL_TRIANGLES, 0, 3 * o.numTriangles);
-    CheckErrors("drawarrays");
+    utils::CheckErrors("drawarrays");
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 
@@ -643,7 +635,7 @@ static void Draw(const std::vector<DrawObject>& drawObjects,
     glTexCoordPointer(2, GL_FLOAT, stride, (const void*)(sizeof(float) * 9));
 
     glDrawArrays(GL_TRIANGLES, 0, 3 * o.numTriangles);
-    CheckErrors("drawarrays");
+    utils::CheckErrors("drawarrays");
   }
 }
 
