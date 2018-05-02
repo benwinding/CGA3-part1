@@ -18,8 +18,7 @@
 
 #include <GLFW/glfw3.h>
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h"
+#include "tiny_obj_loader.cc"
 
 #include "trackball.h"
 
