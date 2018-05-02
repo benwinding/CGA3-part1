@@ -8,7 +8,7 @@ EXT =
 CPPFLAGS = `pkg-config --cflags glfw3` -std=c++11 -Iinclude
 
 CC = g++
-EXE = viewer
+EXE = assign3_part1
 OUT_DIR = out/
 SRC_DIR = src/
 
