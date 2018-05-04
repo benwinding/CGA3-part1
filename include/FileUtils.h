@@ -1,20 +1,9 @@
 #ifndef _A3_UTILS_H_
 #define _A3_UTILS_H_
 
-#include <algorithm>
-#include <cassert>
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include <limits>
-#include <map>
 #include <string>
-#include <vector>
 
-#include <GL/glew.h>
-
-class utils
+class FileUtils
 {
 public:
 	static std::string GetBaseDir(const std::string& filepath);
@@ -22,8 +11,8 @@ public:
 	static void CheckErrors(std::string desc);
 
 private:	
-	utils();
-	~utils();
+	FileUtils();
+	~FileUtils();
 	
 };
 
