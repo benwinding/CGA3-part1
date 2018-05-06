@@ -10,7 +10,7 @@ App::App(int winX, int winY, char* objFilePath)
 {
     this->obj = new ObjContainer(objFilePath);
     this->SetWindowSize(winX, winY);
-    this->Camera = new ObjectViewer(glm::vec3(0,0,0));
+    this->Camera = new ObjectViewer(glm::vec3(0,4,10));
 
     this->setShaders();
     this->setBackgroundColour();

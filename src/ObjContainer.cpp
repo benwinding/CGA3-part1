@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <string>
 #include <iostream>
+#include <unordered_map>
 
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -7,26 +9,29 @@
 #include "tiny_obj_loader.h"
 #include "ObjContainer.h"
 #include "FileUtils.h"
+#include "Shape.h"
 
 ObjContainer::ObjContainer(char* objFilePath) {    
     this->loadModel(objFilePath);    
-    this->setVertexBuffers();
-    this->setIndiceBuffers();    
 }
 
 void ObjContainer::Draw(int shaderID) {
-    glBindVertexArray(this->vb_id);
-
-    glm::mat4 model = glm::mat4();
-    int modelUniformHandle = glGetUniformLocation(shaderID, "model");
-    if (modelUniformHandle == -1)
-        exit(1);
-    glUniformMatrix4fv(modelUniformHandle, 1, false, glm::value_ptr(model));
-
-    glDrawArrays(GL_TRIANGLES, 0, this->numTriangles);
+    glUseProgram(shaderID);
+    for (int i = 0; i < this->shapes.size(); ++i)
+    {
+        this->shapes[i].Draw(shaderID);
+    }
 }
 
 // OBJ { SHAPES { FACES { VERTICES 
+
+void log(std::string name, std::string val) {
+    std::cout << name << " : " << val << std::endl;
+}
+
+void log(std::string name, float val) {
+    std::cout << name << " : " << val << std::endl;
+}
 
 void ObjContainer::loadModel(char* objFilePath) {
     tinyobj::attrib_t attrib;
@@ -48,67 +53,55 @@ void ObjContainer::loadModel(char* objFilePath) {
     if (!ret) {
         exit(1);
     }
-
+ 
     // Loop over shapes
-    for (const auto& shape : shapes) {
-        for (const auto& index : shape.mesh.indices) {
-            Vertex vertex = {};
-            vertex.pos = {
-                attrib.vertices[3 * index.vertex_index + 0],
-                attrib.vertices[3 * index.vertex_index + 1],
-                attrib.vertices[3 * index.vertex_index + 2]
-            };
+    for (size_t s = 0; s < shapes.size(); s++) {
+        // Loop over faces(polygon)
+        size_t index_offset = 0;
+        for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+            int fv = shapes[s].mesh.num_face_vertices[f];
 
-            // vertex.texCoord = {
-            //     attrib.texcoords[2 * index.texcoord_index + 0],
-            //     1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-            // };
+            std::vector<Vertex> shapeVertices;
+            // Loop over vertices in the face.
+            for (size_t v = 0; v < fv; v++) {
+                // access to vertex
+                tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+                tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
+                tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
+                tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
+                tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
+                tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
+                tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
+                // tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
+                // tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
+                // // Optional: vertex colors
+                // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
+                // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
+                // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
 
-            vertex.color = {
-                attrib.colors[3 * index.vertex_index + 0],
-                attrib.colors[3 * index.vertex_index + 1],
-                attrib.colors[3 * index.vertex_index + 2],
-            };
+                Vertex currVertex = {};
+                currVertex.Position = glm::vec3(vx, vy, vz);
+                currVertex.Normal = glm::vec3(nx, ny, nz);
+                // currVertex.TexCoords = glm::vec2(0,0);            
+                // currVertex.TexCoords = vec2(tx, ty);
+                shapeVertices.push_back(currVertex);
+            }
+            index_offset += fv;
 
-            vertices.push_back(vertex);
-            indices.push_back(indices.size());            
+            // per-face material
+            int matId = shapes[s].mesh.material_ids[f];
+            Shape currentShape(matId, shapeVertices);
+            this->shapes.push_back(currentShape);
+            // for (int i = 0; i < shapeVertices.size(); ++i)
+            // {
+            //     Vertex curr = shapeVertices[i];
+            //     log("   curr.pos.x", curr.Position.x);
+            //     log("   curr.pos.y", curr.Position.y);
+            //     log("   curr.pos.z", curr.Position.z);
+            //     log("curr.normal.x", curr.Normal.x);
+            //     log("curr.normal.y", curr.Normal.y);
+            //     log("curr.normal.z", curr.Normal.z);
+            // }    
         }
     }
-}
-
-void ObjContainer::setVertexBuffers() {
-    int bufferSize = sizeof(vertices[0]) * vertices.size();
-    int vertexSize = sizeof(vertices[0]);
-
-    glGenVertexArrays(1, &this->vb_id);
-    glBindVertexArray(this->vb_id);
-
-    unsigned int buffer[3];
-    glGenBuffers(3, buffer);
-
-    // Set vertex attribute Postion
-    glBindBuffer(GL_ARRAY_BUFFER, buffer[0]);
-    glBufferData(GL_ARRAY_BUFFER, bufferSize, &vertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertexSize, (GLvoid*)(sizeof(GLfloat) * 0));
-
-    // Set vertex attribute Normal
-    glBindBuffer(GL_ARRAY_BUFFER, buffer[1]);
-    glBufferData(GL_ARRAY_BUFFER, bufferSize, &vertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertexSize, (GLvoid*)(sizeof(GLfloat) * 3));
-
-    // Set vertex attribute Texture Coordinates
-    glBindBuffer(GL_ARRAY_BUFFER, buffer[2]);
-    glBufferData(GL_ARRAY_BUFFER, bufferSize, &vertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, vertexSize, (GLvoid*)(sizeof(GLfloat) * 6));
-
-    // Un-bind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
-
-void ObjContainer::setIndiceBuffers() {
-
 }

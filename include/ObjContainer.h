@@ -2,17 +2,13 @@
 #define _OBJ_CONTAINER_
 
 #include <vector>
+#include <array>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
-
-typedef struct {
-    glm::vec3 pos;
-    glm::vec3 color;
-    glm::vec2 texCoord;
-} Vertex;
+#include "Shape.h"
 
 class ObjContainer
 {
@@ -24,17 +20,8 @@ public:
     void Draw(int shaderID);
 
 private:
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-
-    GLuint vb_id;
-    int numTriangles;
-    size_t material_id;
-
+    std::vector<Shape> shapes;
     void loadModel(char* filePath);
-    void setVertexBuffers();
-    void setIndiceBuffers();
-
 };
 
 #endif
