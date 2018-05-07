@@ -21,7 +21,6 @@ private:
     int winX, winY;
 
     ObjectViewer *Camera;
-    Shader *wallsShader;
     glm::mat4 projection;
 
     Shader *simpleShader;

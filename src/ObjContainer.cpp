@@ -16,7 +16,6 @@ ObjContainer::ObjContainer(char* objFilePath) {
 }
 
 void ObjContainer::Draw(int shaderID) {
-    glUseProgram(shaderID);
     for (int i = 0; i < this->shapes.size(); ++i)
     {
         this->shapes[i].Draw(shaderID);
@@ -92,16 +91,6 @@ void ObjContainer::loadModel(char* objFilePath) {
             int matId = shapes[s].mesh.material_ids[f];
             Shape currentShape(matId, shapeVertices);
             this->shapes.push_back(currentShape);
-            // for (int i = 0; i < shapeVertices.size(); ++i)
-            // {
-            //     Vertex curr = shapeVertices[i];
-            //     log("   curr.pos.x", curr.Position.x);
-            //     log("   curr.pos.y", curr.Position.y);
-            //     log("   curr.pos.z", curr.Position.z);
-            //     log("curr.normal.x", curr.Normal.x);
-            //     log("curr.normal.y", curr.Normal.y);
-            //     log("curr.normal.z", curr.Normal.z);
-            // }    
         }
     }
 }

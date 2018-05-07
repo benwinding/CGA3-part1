@@ -25,6 +25,16 @@ void App::render()
     // Update the camera, and draw the scene.
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
+    glm::vec3 at(1.0f, 10.0f, 0.0f);
+    glm::vec3 target(0.0f, 1.0f, 0.0f);
+    glm::vec3 up(0.0f, 1.0f, 0.0f);
+
+    Camera->update(at, target, up);
+
+    simpleShader->setMat4("view", Camera->getViewMtx());
+    simpleShader->setMat4("projection", this->projection);
+    simpleShader->setMat4("model", glm::mat4());
+
     int shaderID = this->simpleShader->GetId();
 
     obj->Draw(shaderID);

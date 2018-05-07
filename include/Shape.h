@@ -26,17 +26,16 @@ public:
     size_t GetMaterialId();
 
 private:
-    std::vector<Vertex> vertices;
-
+    void MakeCube(std::vector<Vertex> &vertices);
     GLuint VAO;
     GLuint VBO;
     GLuint EBO;
     
-    int numTriangles;
+    int vertexCount;
     size_t materialId;
 
     void loadModel(char* filePath);
-    void setVertexBuffers();
+    void setVertexBuffers(std::vector<Vertex> vertices);
 };
 
 #endif
