@@ -1,22 +1,21 @@
 
 #version 330
 
-layout (location = 0) in vec3 a_vertex; 
-// layout (location = 1) in vec3 a_normal; 
-// layout (location = 2) in vec2 a_tex_coord;
+// This shader needs both a projection matrix and a view matrix
+// gl_Position is the vertex location in clip coordinates
 
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
+uniform mat4 projection_matrix;
+uniform mat4 modelview_matrix;
 
-// out vec2 TexCoords;
-// out vec3 Normal;
-out vec4 pos;
+layout (location = 0) in vec3 a_vertex;
+layout (location = 1) in vec4 a_colour;	
 
-void main(void)
-{
-	gl_Position = projection * view * model * vec4(a_vertex, 1.0);
-    // TexCoords = a_tex_coord;
-    // Normal = a_normal;
-    pos = vec4(a_vertex, 1.0); //vec3(model * vec4(a_vertex, 1.0));
+out vec3 colour;
+
+void main(void) {
+	
+	colour = a_vertex;	// We simply pass the colour along to the next stage
+
+	gl_Position = projection_matrix * modelview_matrix * vec4(a_vertex, 1.0);
+
 }

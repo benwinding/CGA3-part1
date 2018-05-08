@@ -1,96 +1,57 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
+
+/**
+ * Draws a single cube in front of the camera.
+ * Toggles Projection matrix, and depth buffer.
+ */
+
+#define GLFW_INCLUDE_NONE
+
 #include <iostream>
-#include <fstream>
-#include <string>
+#include <stdlib.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "App.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
-int winX = 700;
-int winY = 500;
-
-App* TheApp;
-bool helpActive = true;
+#include "Shader.h"
 
 GLFWwindow* window;
+int winX = 640;
+int winY = 480;
 
-// Called when the window is resized.
-void reshape_callback(GLFWwindow *window, int x, int y) 
+#define VALS_PER_VERT 3
+#define VALS_PER_COLOUR 4
+#define CUBE_NUM_TRIS 12      // number of triangles in a cube (2 per face)
+#define CUBE_NUM_VERTICES 8     // number of vertices in a cube`
+
+Shader* simpleShader;
+unsigned int cubeVaoHandle;
+GLuint programID;
+
+static void SetCamera()
 {
-    TheApp->SetWindowSize(x, y);
-    glViewport( 0, 0, x, y );
-}
+    glm::mat4 projection;
+    float aspect = (float) winX / winY;    
+    projection = glm::perspective( (float)M_PI/4, aspect, 3.0f, 10.0f );
 
-static void error_callback(int error, const char* description)
-{
-    fputs(description, stderr);
-}
-
-/**
- * Parse program arguments, read maze file, create maze object
- */
-int ParseAndReadMazeFile(int argc, char **argv)
-{
-    std::ifstream infile;
-    int mazeSize;
-    int* mazeLayout;
-    // Parse program arguments
-    if(argc > 1) {
-        if(argc == 3)
-            helpActive = false;
-        // Get first argument in argument array
-        char* fileName = argv[1];
-        std::cout << "Program input: " << fileName << '\n';
-        try {
-            TheApp = new App(winX, winY, fileName);
-        } catch (std::exception const &e) {
-            // If bad argument is provided, exit
-            std::cout << "Bad filename recieved, exitting..." << std::endl;
-            return 0;
-        }
-    }
-    else {
-        // If no argument is provided, exit
-        std::cout << "No filename recieved, exitting..." << std::endl;
-        return 0;
-    }
-    return 1;
-}
-
-void printHelp() 
-{
-    const char * helpScreen = R"V0G0N(
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        ~~~~ Welcome 2 Assignment 3! ~~~~
-        ~~~~~~~~~~~~ Part 1 ~~~~~~~~~~~~~
-        ~~~~~~~~ By Ben Winding ~~~~~~~~~
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Usage: 
-        ./assign3_part1 OBJ1 ... OBJN
-
-    Keyboard:
-
-    )V0G0N";
-    if(helpActive)
-        std::cout << helpScreen << std::endl;
+    // Load it to the shader program
+    simpleShader->setMat4("projection_matrix", projection);        
 }
 
 void key_callback(GLFWwindow* window,
-    int key, int scancode, int action, int mods)
+                  int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_ESCAPE)
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
-
-    TheApp->key_callback(key, action);
+    }
 }
 
-void setWindow()
-{
+void error_callback(int error, const char* description){  std::cerr << description; }
+
+void initWindow() {
     glfwSetErrorCallback(error_callback);
     
     if (!glfwInit()) {
@@ -104,7 +65,7 @@ void setWindow()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Create the window and OpenGL context
-    window = glfwCreateWindow(winX, winY, "Assignment 2: Maze", NULL, NULL);
+    window = glfwCreateWindow(winX, winY, "Here is a cube", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -116,50 +77,146 @@ void setWindow()
     
     // Initialize GLEW
     glewExperimental = true; // Needed for core profile
-    if (glewInit() != GLEW_OK) 
-    {
-        fprintf(stderr, "Failed to initialize GLEW\n");
+    if (glewInit() != GLEW_OK) {
+        std::cerr << "Failed to initialize GLEW\n";
         exit(1);
     }
 
-    // Define callback functions and start main loop
+    // Set up callback functions and start our main loop
     glfwSetKeyCallback(window, key_callback);
-    glfwSetFramebufferSizeCallback(window, reshape_callback);
-}   
-
-void setOpenGlState()
-{
-    // Set OpenGL state we need for this application.
-    glClearColor(0.5F, 0.5F, 0.5F, 0.5F);
-    glEnable(GL_DEPTH_TEST);
 }
 
-int main (int argc, char **argv)
+void initOpengl() {
+    // Initialise OpenGL state
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+    glFrontFace(GL_CCW);
+}
+
+void setShaders() {
+    // Load shader and vertex data
+    simpleShader = new Shader("res/simple.vert", "res/simple.frag");
+}
+
+unsigned int createVAO() {
+    float Vertices[] = {
+        // Positions            // Normals           // Texture Coords
+        // far front
+        -1.0f, -1.0f, -1.0f,   0.0f,  0.0f, -1.0f,   0.0f,  0.0f, // 1
+        1.0f, -1.0f, -1.0f,   0.0f,  0.0f, -1.0f,   1.0f,  0.0f, // 2
+        1.0f,  1.0f, -1.0f,   0.0f,  0.0f, -1.0f,   1.0f,  1.0f, // 3
+        1.0f,  1.0f, -1.0f,   0.0f,  0.0f, -1.0f,   1.0f,  1.0f, // 3
+        -1.0f,  1.0f, -1.0f,   0.0f,  0.0f, -1.0f,   0.0f,  1.0f, // 4
+        -1.0f, -1.0f, -1.0f,   0.0f,  0.0f, -1.0f,   0.0f,  0.0f, // 1
+
+        // near front
+        1.0f,  -1.0f,  1.0f,   0.0f,  0.0f,  1.0f,   0.0f,  0.0f, // b
+        -1.0f, -1.0f,  1.0f,   0.0f,  0.0f,  1.0f,   1.0f,  0.0f, // a
+        -1.0f,  1.0f,  1.0f,   0.0f,  0.0f,  1.0f,   1.0f,  1.0f, // d
+        -1.0f,  1.0f,  1.0f,   0.0f,  0.0f,  1.0f,   1.0f,  1.0f, // d
+        1.0f,   1.0f,  1.0f,   0.0f,  0.0f,  1.0f,   0.0f,  1.0f, // c
+        1.0f,  -1.0f,  1.0f,   0.0f,  0.0f,  1.0f,   0.0f,  0.0f, // b
+
+        // left
+        -1.0f, -1.0f,  1.0f,   -1.0f,  0.0f,  0.0f,  0.0f,  0.0f, // a
+        -1.0f, -1.0f, -1.0f,   -1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // 1
+        -1.0f,  1.0f, -1.0f,   -1.0f,  0.0f,  0.0f,  1.0f,  1.0f, // 4
+        -1.0f,  1.0f, -1.0f,   -1.0f,  0.0f,  0.0f,  1.0f,  1.0f, // 4
+        -1.0f,  1.0f,  1.0f,   -1.0f,  0.0f,  0.0f,  0.0f,  1.0f, // d
+        -1.0f, -1.0f,  1.0f,   -1.0f,  0.0f,  0.0f,  0.0f,  0.0f, // a
+
+        // right
+        1.0f, -1.0f, -1.0f,    1.0f,  0.0f,  0.0f,   0.0f,  0.0f, // 2
+        1.0f, -1.0f,  1.0f,    1.0f,  0.0f,  0.0f,   1.0f,  0.0f, // b
+        1.0f,  1.0f,  1.0f,    1.0f,  0.0f,  0.0f,   1.0f,  1.0f, // c
+        1.0f,  1.0f,  1.0f,    1.0f,  0.0f,  0.0f,   1.0f,  1.0f, // c
+        1.0f,  1.0f, -1.0f,    1.0f,  0.0f,  0.0f,   0.0f,  1.0f, // 3
+        1.0f, -1.0f, -1.0f,    1.0f,  0.0f,  0.0f,   0.0f,  0.0f, // 2 
+
+        // floor
+        -1.0f, -1.0f, -1.0f,   0.0f, -1.0f,  0.0f,   0.0f,  1.0f, // 1
+        1.0f, -1.0f, -1.0f,   0.0f, -1.0f,  0.0f,   1.0f,  1.0f, // 2
+        1.0f, -1.0f,  1.0f,   0.0f, -1.0f,  0.0f,   1.0f,  0.0f, // b
+        1.0f, -1.0f,  1.0f,   0.0f, -1.0f,  0.0f,   1.0f,  0.0f,
+        -1.0f, -1.0f,  1.0f,   0.0f, -1.0f,  0.0f,   0.0f,  0.0f, // a
+        -1.0f, -1.0f, -1.0f,   0.0f, -1.0f,  0.0f,   0.0f,  1.0f,
+
+        //sky
+        -1.0f,  1.0f,  1.0f,   0.0f,  1.0f,  0.0f,   0.0f,  1.0f, // d
+        1.0f,  1.0f,  1.0f,   0.0f,  1.0f,  0.0f,   1.0f,  1.0f, // c
+        1.0f,  1.0f, -1.0f,   0.0f,  1.0f,  0.0f,   1.0f,  0.0f, // 3
+        1.0f,  1.0f, -1.0f,   0.0f,  1.0f,  0.0f,   1.0f,  0.0f, // 3
+        -1.0f,  1.0f, -1.0f,   0.0f,  1.0f,  0.0f,   0.0f,  0.0f, // 4
+        -1.0f,  1.0f,  1.0f,   0.0f,  1.0f,  0.0f,   0.0f,  1.0f  // d
+    };
+    unsigned int vaoHandle;
+    glGenVertexArrays(1, &vaoHandle);
+    glBindVertexArray(vaoHandle);
+
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
+
+    // Set vertex attribute Postion
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(sizeof(GLfloat) * 0));
+
+    // Set vertex attribute Normal
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(sizeof(GLfloat) * 3));
+
+    // Set vertex attribute Texture Coordinates
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(sizeof(GLfloat) * 6));
+
+    // Un-bind
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    
+    return vaoHandle;
+}
+void setVertices() {
+    cubeVaoHandle = createVAO();
+}
+
+void render() {
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    simpleShader->use();
+    glBindVertexArray(cubeVaoHandle);
+
+    glm::mat4 cameraMatrix;
+    cameraMatrix = glm::translate(cameraMatrix, glm::vec3(0.0f, 0.0f, -5.0f));
+    simpleShader->setMat4("modelview_matrix", cameraMatrix);
+
+    glDrawArrays(GL_TRIANGLES, 0, CUBE_NUM_VERTICES);
+
+    glBindVertexArray(0);
+    glFlush();
+}
+
+int main(int argc, char **argv)
 {
-    // Print program help
-    printHelp();
-    setWindow();
-    // Parse program arguments and read maze
-    if (!ParseAndReadMazeFile(argc, argv)) 
-    {
-        exit(1);
-    }
-    setOpenGlState();
-   
+    initWindow();
+    initOpengl();
+    setShaders();
+    setVertices();
+
     while (!glfwWindowShouldClose(window))
     {
-        TheApp->render();
+        SetCamera();
+        render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     // Clean up
-    delete TheApp;
-    
     glfwDestroyWindow(window);
     glfwTerminate();
     exit(0);
-    
+
     return 0;
-}
+}   
