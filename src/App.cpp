@@ -31,6 +31,8 @@ void App::render()
 
     Camera->update(at, target, up);
 
+    updateProjection();
+
     simpleShader->setMat4("view", Camera->getViewMtx());
     simpleShader->setMat4("projection", this->projection);
     simpleShader->setMat4("model", glm::mat4());

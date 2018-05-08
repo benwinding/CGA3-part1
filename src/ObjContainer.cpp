@@ -60,7 +60,7 @@ void ObjContainer::loadModel(char* objFilePath) {
         for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
             int fv = shapes[s].mesh.num_face_vertices[f];
 
-            std::vector<Vertex> shapeVertices;
+            std::vector<float> shapeVertices;
             // Loop over vertices in the face.
             for (size_t v = 0; v < fv; v++) {
                 // access to vertex
@@ -71,19 +71,21 @@ void ObjContainer::loadModel(char* objFilePath) {
                 tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
                 tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
                 tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
-                // tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
-                // tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
+                tinyobj::real_t tx = 0; //attrib.texcoords[2*idx.texcoord_index+0];
+                tinyobj::real_t ty = 0; //attrib.texcoords[2*idx.texcoord_index+1];
                 // // Optional: vertex colors
                 // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
                 // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
                 // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
 
-                Vertex currVertex = {};
-                currVertex.Position = glm::vec3(vx, vy, vz);
-                currVertex.Normal = glm::vec3(nx, ny, nz);
-                // currVertex.TexCoords = glm::vec2(0,0);            
-                // currVertex.TexCoords = vec2(tx, ty);
-                shapeVertices.push_back(currVertex);
+                shapeVertices.push_back(vx);
+                shapeVertices.push_back(vy);
+                shapeVertices.push_back(vz);
+                shapeVertices.push_back(nx);
+                shapeVertices.push_back(ny);
+                shapeVertices.push_back(nz);
+                shapeVertices.push_back(tx);
+                shapeVertices.push_back(ty);
             }
             index_offset += fv;
 
@@ -91,6 +93,7 @@ void ObjContainer::loadModel(char* objFilePath) {
             int matId = shapes[s].mesh.material_ids[f];
             Shape currentShape(matId, shapeVertices);
             this->shapes.push_back(currentShape);
+            return;
         }
     }
 }

@@ -19,14 +19,14 @@ class Shape
 {
 
 public:
-    Shape(size_t materialId, std::vector<Vertex> vertices);
+    Shape(size_t materialId, std::vector<float> vertices);
     ~Shape();
 
     void Draw(int shaderID);
     size_t GetMaterialId();
 
 private:
-    void MakeCube(std::vector<Vertex> &vertices);
+    void MakeCube(std::vector<float> &vertices);
     GLuint VAO;
     GLuint VBO;
     GLuint EBO;
@@ -35,7 +35,7 @@ private:
     size_t materialId;
 
     void loadModel(char* filePath);
-    void setVertexBuffers(std::vector<Vertex> vertices);
+    void setVertexBuffers(std::vector<float> vertices);
 };
 
 #endif
