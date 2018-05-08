@@ -16,6 +16,6 @@ void main(void) {
 	
 	colour = a_vertex;	// We simply pass the colour along to the next stage
 
+    gl_Position = projection_matrix * vec4(a_vertex, 1.0);
 	gl_Position = projection_matrix * modelview_matrix * vec4(a_vertex, 1.0);
-
 }

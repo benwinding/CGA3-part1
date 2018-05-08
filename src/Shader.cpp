@@ -100,12 +100,13 @@ void Shader::use()
 
 void Shader::setMat4(std::string uniformName, const glm::mat4 &mat)
 {
-    glUniformMatrix4fv(this->getHandle(uniformName), 1, GL_FALSE, &mat[0][0]);
+    use();
+    glUniformMatrix4fv(this->getHandle(uniformName), 1, GL_FALSE, glm::value_ptr(mat));
 }
 
 void Shader::setVec3(std::string uniformName, const glm::vec3 &vec)
 {
-    glUniform3fv(this->getHandle(uniformName), 1, &vec[0]); 
+    glUniform3fv(this->getHandle(uniformName), 1, glm::value_ptr(vec));
 }
 
 void Shader::setVec3(std::string uniformName, float x, float y, float z)
@@ -137,7 +138,8 @@ int Shader::getHandle(std::string uniformName)
 {
     int handle = glGetUniformLocation(this->shaderId, uniformName.c_str());
     if (handle == -1) {
-        std::cout << "Uniform: '" << uniformName.c_str() << "' is not an active uniform label\n";
+        std::cout << "ShaderId=" << this->shaderId << ", Uniform=" << uniformName.c_str() << ", Handle=" << handle << std::endl;
+        // std::cout << "Uniform: '" << uniformName.c_str() << "' is not an active uniform label\n";
     }
     return handle;
 }

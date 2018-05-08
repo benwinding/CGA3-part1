@@ -12,9 +12,16 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
+#define GLM_FORCE_RADIANS // We must work in radians in newer versions of GLM...
+#include <glm/glm.hpp> // ...so now that's defined we can import GLM itself.
+#include "glm/gtc/matrix_transform.hpp" // Needed for the perspective() method
+// #include <glm/gtx/string_cast.hpp>
+
+
+// #include "glm/gtx/string_cast.hpp"
+// #include "glm/glm.hpp"
+// #include "glm/gtc/matrix_transform.hpp"
+// #include "glm/gtc/type_ptr.hpp"
 
 #include "Shader.h"
 
@@ -28,19 +35,8 @@ int winY = 480;
 #define CUBE_NUM_VERTICES 8     // number of vertices in a cube`
 
 Shader* simpleShader;
-unsigned int cubeVaoHandle;
-GLuint programID;
-
-static void SetCamera()
-{
-    glm::mat4 projection;
-    float aspect = (float) winX / winY;    
-    projection = glm::perspective( (float)M_PI/4, aspect, 3.0f, 10.0f );
-
-    // Load it to the shader program
-    simpleShader->setMat4("projection_matrix", projection);        
-}
-
+GLuint cubeVaoHandle;
+    
 void key_callback(GLFWwindow* window,
                   int key, int scancode, int action, int mods)
 {
@@ -98,7 +94,7 @@ void setShaders() {
     simpleShader = new Shader("res/simple.vert", "res/simple.frag");
 }
 
-unsigned int createVAO() {
+void createVAO() {
     float Vertices[] = {
         // Positions            // Normals           // Texture Coords
         // far front
@@ -149,9 +145,8 @@ unsigned int createVAO() {
         -1.0f,  1.0f, -1.0f,   0.0f,  1.0f,  0.0f,   0.0f,  0.0f, // 4
         -1.0f,  1.0f,  1.0f,   0.0f,  1.0f,  0.0f,   0.0f,  1.0f  // d
     };
-    unsigned int vaoHandle;
-    glGenVertexArrays(1, &vaoHandle);
-    glBindVertexArray(vaoHandle);
+    glGenVertexArrays(1, &cubeVaoHandle);
+    glBindVertexArray(cubeVaoHandle);
 
     unsigned int buffer;
     glGenBuffers(1, &buffer);
@@ -173,11 +168,10 @@ unsigned int createVAO() {
     // Un-bind
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    
-    return vaoHandle;
 }
+
 void setVertices() {
-    cubeVaoHandle = createVAO();
+    createVAO();
 }
 
 void render() {
@@ -185,12 +179,21 @@ void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     simpleShader->use();
-    glBindVertexArray(cubeVaoHandle);
-
+    // Set Uniforms
     glm::mat4 cameraMatrix;
+    cameraMatrix = glm::mat4(1.0f);
     cameraMatrix = glm::translate(cameraMatrix, glm::vec3(0.0f, 0.0f, -5.0f));
     simpleShader->setMat4("modelview_matrix", cameraMatrix);
 
+    simpleShader->use();
+    float aspect = (float) winX / winY;    
+    glm::mat4 projection;
+    projection = glm::mat4(1.0f);
+
+    projection = glm::perspective( (float)M_PI/4, aspect, 0.001f, 10.0f );
+    simpleShader->setMat4("projection_matrix", projection);        
+
+    glBindVertexArray(cubeVaoHandle);
     glDrawArrays(GL_TRIANGLES, 0, CUBE_NUM_VERTICES);
 
     glBindVertexArray(0);
@@ -206,7 +209,6 @@ int main(int argc, char **argv)
 
     while (!glfwWindowShouldClose(window))
     {
-        SetCamera();
         render();
 
         glfwSwapBuffers(window);
