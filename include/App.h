@@ -6,6 +6,7 @@
 #include "Shader.h"
 #include "Viewer.h"
 #include "ObjContainer.h"
+#include "InputState.h"
 
 enum debugViewType
 {
@@ -24,12 +25,18 @@ public:
 
     void render();
     void key_callback(int key, int action);
+    void mouseBtn_callback(int button, int action);
+    void mouseMove_callback(double x, double y);
+
     int SetWindowSize(int x, int y);
+
 
 private:
     int winX, winY;
 
     ObjContainer *obj;
+
+    InputState mouseInput;
 
     Shader *shader;
     Shader *simpleShader;

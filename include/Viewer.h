@@ -9,6 +9,7 @@
 #ifndef _VIEWER_H_
 #define _VIEWER_H_
 
+#include "InputState.h"
 #include "glm/glm.hpp"
 
 /**
@@ -27,14 +28,14 @@ protected:
     glm::vec3 initUp;
 
 public:
-    Viewer(glm::vec3 eye);
+    Viewer( glm::vec3 eye );
     virtual ~Viewer() = 0;
 
     const glm::mat4 getViewMtx() const;
     //    void orthogonaliseViewMtx();
     void reset();
 
-    virtual void update(glm::vec3 eye, glm::vec3 target, glm::vec3 up)  = 0;
+    virtual void update( InputState &input ) = 0;
 };
 
 
@@ -46,9 +47,27 @@ public:
 class ObjectViewer : public Viewer
 {
 public:
-    ObjectViewer(glm::vec3 eye);
+    ObjectViewer( glm::vec3 eye );
 
-    virtual void update(glm::vec3 eye, glm::vec3 target, glm::vec3 up);
+    virtual void update( InputState &input );
 };
+
+/**
+ This is an example of what NOT to do!
+ WorldObjectViewer rotates about the world x and y axes
+ in response to mouse motion. Vertical motion -> x axis
+ rotation, horizontal motion -> y axis rotation.
+*/
+class WorldObjectViewer : public Viewer
+{
+    float xRot;
+    float yRot;
+    
+public:
+    WorldObjectViewer( glm::vec3 eye );
+
+    virtual void update( InputState &input );
+};
+
 
 #endif // VIEWER_H

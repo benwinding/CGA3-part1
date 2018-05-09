@@ -32,6 +32,16 @@ void key_callback(GLFWwindow* window,
     TheApp->key_callback(key, action);
 }
 
+void mouse_pos_callback(GLFWwindow* window, double x, double y)
+{
+    TheApp->mouseMove_callback(x,y);
+}    
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    TheApp->mouseBtn_callback(button, action);
+}
+
 void error_callback(int error, const char* description){  std::cerr << description; }
 
 void windowResize_callback(GLFWwindow *window, int x, int y) 
@@ -74,6 +84,8 @@ void initWindow() {
     // Callback functions
     glfwSetKeyCallback(window, key_callback);
     glfwSetFramebufferSizeCallback(window, windowResize_callback);
+    glfwSetCursorPosCallback(window, mouse_pos_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
 }
 
 void initOpengl() {

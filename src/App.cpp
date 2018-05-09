@@ -18,6 +18,8 @@ App::App(int winX, int winY, char* objFilePath)
 void App::render() 
 {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+    Camera->update(mouseInput);    
     // Set shader
     shader->use();
     // Set Uniforms
@@ -52,6 +54,27 @@ void App::key_callback(int key, int action)
                 break;
         }
     }
+}
+
+void App::mouseBtn_callback(int button, int action)
+{
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+        mouseInput.rMousePressed = true;
+    }
+    else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
+        mouseInput.rMousePressed = false;
+    }
+    else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        mouseInput.lMousePressed = true;
+    }
+    else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+        mouseInput.lMousePressed = false;
+    }                
+}
+
+void App::mouseMove_callback(double x, double y)
+{
+    mouseInput.update((float)x, (float)y);
 }
 
 void App::cycleDebugView() 
