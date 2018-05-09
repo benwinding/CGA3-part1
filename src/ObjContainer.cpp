@@ -18,7 +18,7 @@ ObjContainer::ObjContainer(char* objFilePath) {
 void ObjContainer::Draw() {
     for (int i = 0; i < this->shapes.size(); ++i)
     {
-        this->shapes[i].Draw();
+        this->shapes[i].DrawShape();
     }
 }
 
@@ -84,7 +84,7 @@ void ObjContainer::loadModel(char* objFilePath) {
         }
         int matId = shapes[s].mesh.material_ids[0];
         currShape.SetMatId(matId);
-        currShape.SetVertexBuffer();
+        currShape.SetVertices();
         this->shapes.push_back(currShape);
     }
 }

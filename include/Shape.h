@@ -17,10 +17,10 @@ public:
     ~Shape();
 
     void SetMatId(size_t matId);
-    void SetVertexBuffer();
-    void setVertices();
+    void SetVertices();
+    void setVerticesCube();
 
-    void Draw();
+    void DrawShape();
     size_t GetMaterialId();
     void AddVertex(float px, float py, float pz,
                 float nx, float ny, float nz,
@@ -34,7 +34,6 @@ private:
     unsigned int VAO;
 
     void loadModel(char* filePath);
-    void setVertexBuffers(std::vector<float> vertices);
 };
 
 #endif

@@ -62,7 +62,8 @@ void Shape::MakeCube(std::vector<float> &vertices) {
 }
 
 Shape::Shape() {    
-    setVertices();
+    // setVertices();
+    this->vertexCount = 0;
 }
 
 Shape::~Shape() { 
@@ -70,9 +71,6 @@ Shape::~Shape() {
 
 void Shape::SetMatId(size_t matId) { 
     this->materialId = matId;
-}
-
-void Shape::SetVertexBuffer() { 
 }
 
 size_t Shape::GetMaterialId() {
@@ -83,7 +81,7 @@ size_t Shape::GetMaterialId() {
 #define CUBE_NUM_TRIS 12
 #define VALS_PER_VERT 8
 
-void Shape::Draw() {
+void Shape::DrawShape() {
     glBindVertexArray(VAO);
 
     glDrawArrays(GL_TRIANGLES, 0, CUBE_NUM_VERTICES);
@@ -102,9 +100,36 @@ void Shape::AddVertex(float px, float py, float pz,
     vertices.push_back(nz);
     vertices.push_back(tx);
     vertices.push_back(ty);
+    this->vertexCount++;
 }
 
-void Shape::setVertices() {
+void Shape::SetVertices() {
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
+
+    // Set vertex attribute Postion
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(GLfloat) * 8, &vertices[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(sizeof(GLfloat) * 0));
+
+    // Set vertex attribute Normal
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(sizeof(GLfloat) * 3));
+
+    // Set vertex attribute Texture Coordinates
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(sizeof(GLfloat) * 6));
+
+    // Un-bind
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+void Shape::setVerticesCube() {
     float Vertices[] = {
         // Positions            // Normals           // Texture Coords
         // far front
