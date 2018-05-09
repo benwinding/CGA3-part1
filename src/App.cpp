@@ -13,71 +13,28 @@
 
 App::App(int winX, int winY, char* objFilePath)
 {    
-    this->winX = winX;
-    this->winY = winY;
-    this->obj = new ObjContainer(objFilePath);
     this->setShaders();
-    // this->setVertices();
-    // this->SetWindowSize(winX, winY);
-    // this->Camera = new ObjectViewer(glm::vec3(0,4,10));
-
-    // this->setShaders();
-    // this->setBackgroundColour();
-}
-
-App::~App()
-{
+    this->SetWindowSize(winX, winY);
+    this->obj = new ObjContainer(objFilePath);
+    this->Camera = new ObjectViewer(glm::vec3(0,4,10));
 }
 
 void App::render() 
 {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    // Set shader
     simpleShader->use();
-
     // Set Uniforms
-    glm::mat4 cameraMatrix;
-    cameraMatrix = glm::mat4(1.0f);
-    cameraMatrix = glm::translate(cameraMatrix, glm::vec3(0.0f, 0.0f, -5.0f));
-    simpleShader->setMat4("modelview_matrix", cameraMatrix);
-
-    float aspect = (float) winX / winY;    
-    glm::mat4 projection;
-    projection = glm::mat4(1.0f);
-    projection = glm::perspective( (float)M_PI/4, aspect, 0.001f, 10.0f );
-    simpleShader->setMat4("projection_matrix", projection);        
-
+    simpleShader->setMat4("projection_matrix", projection);
+    simpleShader->setMat4("modelview_matrix", this->Camera->getViewMtx());
+    // Draw objs
     this->obj->Draw();
-
-    // Update the camera, and draw the scene.
-    // glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-    // glm::vec3 at(1.0f, 10.0f, 0.0f);
-    // glm::vec3 target(0.0f, 1.0f, 0.0f);
-    // glm::vec3 up(0.0f, 1.0f, 0.0f);
-
-    // Camera->update(at, target, up);
-
-    // updateProjection();
-
-    // simpleShader->setMat4("view", Camera->getViewMtx());
-    // simpleShader->setMat4("projection", this->projection);
-    // simpleShader->setMat4("model", glm::mat4());
-
-    // int shaderID = this->simpleShader->GetId();
-
-    // obj->Draw(shaderID);
 }
 
 void App::setShaders() 
 {
     std::string prefix = "res/";
-    // Set up the shaders we are to use. 0 indicates error.
     this->simpleShader = new Shader(prefix + "simple.vert", prefix + "simple.frag");
-}
-
-void App::setBackgroundColour() 
-{
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void App::key_callback(int key, int action)
@@ -96,6 +53,11 @@ int App::SetWindowSize(int x, int y)
 
 void App::updateProjection()
 {
-    // float fov = 85;
-    // this->projection = glm::perspective(glm::radians(fov), (float) winX / winY, 0.5f, 10000.0f );
+    float aspect = (float) this->winX / this->winY;    
+    float fov = 85;
+    projection = glm::perspective(glm::radians(fov), aspect, 0.005f, 1000.0f );
+}
+
+void App::updateCamera() 
+{
 }

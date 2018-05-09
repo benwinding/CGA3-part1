@@ -7,11 +7,13 @@
 #include "Viewer.h"
 #include "ObjContainer.h"
 
-// Repsonsible Composing the program and 
+/*
+ The App class is Repsonsible Composing the program and 
+ Drawing the scene
+ */
 class App {
 public:
     App(int winX, int winY, char* objFilePath);
-    ~App();
 
     void render();
     void key_callback(int key, int action);
@@ -20,18 +22,17 @@ public:
 private:
     int winX, winY;
 
-    ObjectViewer *Camera;
-    // glm::mat4 projection;
-
     Shader *simpleShader;
+    void setShaders();
 
+    ObjectViewer *Camera;
+
+    glm::mat4 projection;
+    
     ObjContainer *obj;
-    unsigned int VAO;
 
     void updateProjection();
-    void setShaders();
-    void setVertices();
-    void setBackgroundColour();
+    void updateCamera();
 };
 
 #endif

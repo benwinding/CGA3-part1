@@ -22,15 +22,7 @@ void ObjContainer::Draw() {
     }
 }
 
-// OBJ { SHAPES { FACES { VERTICES 
-
-void log(std::string name, std::string val) {
-    std::cout << name << " : " << val << std::endl;
-}
-
-void log(std::string name, float val) {
-    std::cout << name << " : " << val << std::endl;
-}
+// OBJ { SHAPES { VERTICES 
 
 void ObjContainer::loadModel(char* objFilePath) {
     tinyobj::attrib_t attrib;

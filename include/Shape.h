@@ -18,7 +18,6 @@ public:
 
     void SetMatId(size_t matId);
     void SetVertices();
-    void setVerticesCube();
 
     void DrawShape();
     size_t GetMaterialId();
@@ -27,7 +26,6 @@ public:
                 float tx, float ty);
 private:
     std::vector<float> vertices;
-    void MakeCube(std::vector<float> &vertices);
     
     int vertexCount;
     size_t materialId;
