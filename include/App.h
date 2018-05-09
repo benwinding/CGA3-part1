@@ -38,6 +38,8 @@ private:
 
     int currentDebugView;
     void cycleDebugView();
+    void cycleLighting();
+    void toggleLightTexture();
 
     glm::mat4 projection;
     void updateProjection();

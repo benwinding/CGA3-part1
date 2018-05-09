@@ -49,6 +49,12 @@ void App::key_callback(int key, int action)
             case GLFW_KEY_B:
                 cycleDebugView();
                 break;
+            case GLFW_KEY_D:
+                cycleLighting();
+                break;
+            case GLFW_KEY_T:
+                toggleLightTexture();
+                break;
         }
     }
 }
@@ -69,6 +75,14 @@ void App::cycleDebugView()
             this->shader = this->otherShader;
             break;
     }
+}
+
+void App::cycleLighting() 
+{    
+}
+
+void App::toggleLightTexture() 
+{    
 }
 
 int App::SetWindowSize(int x, int y)
