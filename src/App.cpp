@@ -7,13 +7,8 @@
 
 #include "App.h"
 
-#define VALS_PER_VERT 3
-#define VALS_PER_COLOUR 4
-#define CUBE_NUM_TRIS 12      // number of triangles in a cube (2 per face)
-#define CUBE_NUM_VERTICES 8     // number of vertices in a cube`
-
 App::App(int winX, int winY, char* objFilePath)
-{    
+{
     this->setShaders();
     this->SetWindowSize(winX, winY);
     this->obj = new ObjContainer(objFilePath);

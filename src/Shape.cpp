@@ -25,14 +25,10 @@ size_t Shape::GetMaterialId() {
     return this->materialId;
 }
 
-#define CUBE_NUM_VERTICES 36
-#define CUBE_NUM_TRIS 12
-#define VALS_PER_VERT 8
-
 void Shape::DrawNormal() {
     glBindVertexArray(VAO);
 
-    glDrawArrays(GL_TRIANGLES, 0, CUBE_NUM_VERTICES);
+    glDrawArrays(GL_TRIANGLES, 0, this->vertexCount);
 
     glBindVertexArray(0);
     glFlush();
@@ -41,7 +37,7 @@ void Shape::DrawNormal() {
 void Shape::DrawWireframe() {
     glBindVertexArray(VAO);
 
-    glDrawArrays(GL_LINE_LOOP, 0, CUBE_NUM_VERTICES);
+    glDrawArrays(GL_LINE_LOOP, 0, this->vertexCount);
 
     glBindVertexArray(0);
     glFlush();
