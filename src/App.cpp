@@ -12,6 +12,8 @@ App::App(int winX, int winY, char* objFilePath)
     this->setShaders();
     this->SetWindowSize(winX, winY);
     this->obj = new ObjContainer(objFilePath);
+    this->obj2 = new ObjContainer(objFilePath);
+
     this->Camera = new ObjectViewer(glm::vec3(0,4,10));
 }
 
@@ -27,6 +29,10 @@ void App::render()
     shader->setMat4("modelview_matrix", this->Camera->getViewMtx());
     // Draw objs
     this->obj->Draw();
+
+    glm::mat4 newViewMtx = glm::translate(this->Camera->getViewMtx(), glm::vec3(2.0f, 0.0f, 0.0f) );
+    shader->setMat4("modelview_matrix", newViewMtx);
+    this->obj2->Draw();
 
     glFlush();
 }

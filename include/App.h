@@ -35,6 +35,7 @@ private:
     int winX, winY;
 
     ObjContainer *obj;
+    ObjContainer *obj2;
 
     InputState mouseInput;
 
