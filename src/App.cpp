@@ -11,10 +11,11 @@ App::App(int winX, int winY, char* objFilePath)
 {
     this->setShaders();
     this->SetWindowSize(winX, winY);
-    this->obj = new ObjContainer(objFilePath);
-    this->obj2 = new ObjContainer(objFilePath);
+    this->objList.push_back(new ObjContainer(objFilePath));
+    this->objList.push_back(new ObjContainer(objFilePath));
+    this->objList.push_back(new ObjContainer(objFilePath));
 
-    this->Camera = new ObjectViewer(glm::vec3(0,1,5));
+    this->Camera = new ObjectViewer(glm::vec3(0,1,3));
 }
 
 void App::render() 
@@ -28,11 +29,17 @@ void App::render()
     shader->setMat4("projection", projection);
     shader->setMat4("view", this->Camera->getViewMtx());
     // Draw objs
-    this->obj->Draw();
+    int objCount = this->objList.size();
+    for (int i = 0; i < objCount; ++i)
+    {
+        // Move each item along
+        float gapSize = 2;
+        float tranDistance = (i * gapSize) - (gapSize * objCount) / 2 + 1;
+        glm::mat4 newViewMtx = glm::translate(this->Camera->getViewMtx(), glm::vec3(tranDistance, 0.0f, 0.0f) );
+        shader->setMat4("model", newViewMtx);
 
-    glm::mat4 newViewMtx = glm::translate(this->Camera->getViewMtx(), glm::vec3(2.0f, 0.0f, 0.0f) );
-    shader->setMat4("view", newViewMtx);
-    this->obj2->Draw();
+        this->objList[i]->Draw();
+    }
 
     glFlush();
 }
@@ -88,27 +95,23 @@ void App::key_callback(int key, int action)
 void App::cycleDebugView() 
 {
     this->currentDebugView = (this->currentDebugView + 1) % 3 ;
+    this->shader = this->simpleShader;
     switch (this->currentDebugView) {
         case WIRE_FRAME:
             std::cout << "- Debug Mode : WIRE_FRAME" << std::endl;
-            this->shader = this->simpleShader;
-            shader->setInt("debugMode", this->currentDebugView);
-            this->obj->IsWireframe = true;
-            this->obj2->IsWireframe = true;
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             break;
         case NORMAL:
             std::cout << "- Debug Mode : NORMAL" << std::endl;
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             this->shader = this->simpleShader;
-            shader->setInt("debugMode", this->currentDebugView);
-            this->obj->IsWireframe = false;
-            this->obj2->IsWireframe = false;
             break;        
         case DIFFUSE:
             std::cout << "- Debug Mode : DIFFUSE" << std::endl;
             this->shader = this->simpleShader;
-            shader->setInt("debugMode", this->currentDebugView);
             break;
     }
+    shader->setInt("debugMode", this->currentDebugView);
 }
 
 void App::cycleLighting() 

@@ -18,7 +18,6 @@ public:
     ~ObjContainer();
 
     void Draw();
-    bool IsWireframe;
 
 private:
     std::vector<Shape> shapes;

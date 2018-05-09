@@ -25,21 +25,10 @@ size_t Shape::GetMaterialId() {
     return this->materialId;
 }
 
-void Shape::DrawNormal() {
+void Shape::DrawShape() {
     glBindVertexArray(VAO);
-
     glDrawArrays(GL_TRIANGLES, 0, this->vertexCount);
-
     glBindVertexArray(0);
-}
-
-void Shape::DrawWireframe() {
-    glBindVertexArray(VAO);
-
-    glDrawArrays(GL_LINE_LOOP, 0, this->vertexCount);
-
-    glBindVertexArray(0);
-    glFlush();
 }
 
 void Shape::AddVertex(float px, float py, float pz,

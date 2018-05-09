@@ -34,8 +34,7 @@ public:
 private:
     int winX, winY;
 
-    ObjContainer *obj;
-    ObjContainer *obj2;
+    std::vector<ObjContainer *> objList;
 
     InputState mouseInput;
 
@@ -48,6 +47,8 @@ private:
     void cycleDebugView();
     void cycleLighting();
     void toggleLightTexture();
+
+    void SetAllObjWireframe(bool isWireframe);
 
     glm::mat4 projection;
     void updateProjection();
