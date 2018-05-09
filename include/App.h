@@ -7,6 +7,13 @@
 #include "Viewer.h"
 #include "ObjContainer.h"
 
+enum debugViewType
+{
+   WIRE_FRAME,
+   NORMAL,
+   DIFFUSE
+};
+
 /*
  The App class is Repsonsible Composing the program and 
  Drawing the scene
@@ -22,17 +29,20 @@ public:
 private:
     int winX, winY;
 
-    Shader *simpleShader;
-    void setShaders();
-
-    ObjectViewer *Camera;
-
-    glm::mat4 projection;
-    
     ObjContainer *obj;
 
+    Shader *shader;
+    Shader *simpleShader;
+    Shader *otherShader;
+    void setShaders();
+
+    int currentDebugView;
+    void cycleDebugView();
+
+    glm::mat4 projection;
     void updateProjection();
-    void updateCamera();
+
+    ObjectViewer *Camera;
 };
 
 #endif

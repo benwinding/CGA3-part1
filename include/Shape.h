@@ -19,7 +19,9 @@ public:
     void SetMatId(size_t matId);
     void SetVertices();
 
-    void DrawShape();
+    void DrawNormal();
+    void DrawWireframe();
+
     size_t GetMaterialId();
     void AddVertex(float px, float py, float pz,
                 float nx, float ny, float nz,

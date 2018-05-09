@@ -13,12 +13,16 @@
 
 ObjContainer::ObjContainer(char* objFilePath) {    
     this->loadModel(objFilePath);    
+    this->IsWireframe = false;
 }
 
 void ObjContainer::Draw() {
     for (int i = 0; i < this->shapes.size(); ++i)
     {
-        this->shapes[i].DrawShape();
+        if (this->IsWireframe)
+            this->shapes[i].DrawWireframe();
+        else
+            this->shapes[i].DrawNormal();            
     }
 }
 
