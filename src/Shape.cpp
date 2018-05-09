@@ -31,7 +31,6 @@ void Shape::DrawNormal() {
     glDrawArrays(GL_TRIANGLES, 0, this->vertexCount);
 
     glBindVertexArray(0);
-    glFlush();
 }
 
 void Shape::DrawWireframe() {

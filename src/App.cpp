@@ -27,6 +27,8 @@ void App::render()
     shader->setMat4("modelview_matrix", this->Camera->getViewMtx());
     // Draw objs
     this->obj->Draw();
+
+    glFlush();
 }
 
 void App::setShaders() 
@@ -82,14 +84,17 @@ void App::cycleDebugView()
     this->currentDebugView = (this->currentDebugView + 1) % 3 ;
     switch (this->currentDebugView) {
         case WIRE_FRAME:
+            std::cout << "- Debug Mode : WIRE_FRAME" << std::endl;
             this->shader = this->simpleShader;
             this->obj->IsWireframe = true;
             break;
         case NORMAL:
+            std::cout << "- Debug Mode : NORMAL" << std::endl;
             this->shader = this->simpleShader;
             this->obj->IsWireframe = false;
             break;        
         case DIFFUSE:
+            std::cout << "- Debug Mode : DIFFUSE" << std::endl;
             this->shader = this->otherShader;
             break;
     }
