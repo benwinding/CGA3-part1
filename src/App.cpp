@@ -14,7 +14,7 @@ App::App(int winX, int winY, char* objFilePath)
     this->obj = new ObjContainer(objFilePath);
     this->obj2 = new ObjContainer(objFilePath);
 
-    this->Camera = new ObjectViewer(glm::vec3(0,4,10));
+    this->Camera = new ObjectViewer(glm::vec3(0,1,5));
 }
 
 void App::render() 
@@ -25,13 +25,13 @@ void App::render()
     // Set shader
     shader->use();
     // Set Uniforms
-    shader->setMat4("projection_matrix", projection);
-    shader->setMat4("modelview_matrix", this->Camera->getViewMtx());
+    shader->setMat4("projection", projection);
+    shader->setMat4("view", this->Camera->getViewMtx());
     // Draw objs
     this->obj->Draw();
 
     glm::mat4 newViewMtx = glm::translate(this->Camera->getViewMtx(), glm::vec3(2.0f, 0.0f, 0.0f) );
-    shader->setMat4("modelview_matrix", newViewMtx);
+    shader->setMat4("view", newViewMtx);
     this->obj2->Draw();
 
     glFlush();
@@ -43,25 +43,6 @@ void App::setShaders()
     this->simpleShader = new Shader(prefix + "simple.vert", prefix + "simple.frag");
     this->otherShader = new Shader(prefix + "simple2.vert", prefix + "simple2.frag");
     this->shader = this->simpleShader;
-}
-
-void App::key_callback(int key, int action)
-{
-    if (action == GLFW_PRESS) 
-    {
-        switch(key) 
-        {
-            case GLFW_KEY_B:
-                cycleDebugView();
-                break;
-            case GLFW_KEY_D:
-                cycleLighting();
-                break;
-            case GLFW_KEY_T:
-                toggleLightTexture();
-                break;
-        }
-    }
 }
 
 void App::mouseBtn_callback(int button, int action)
@@ -85,6 +66,25 @@ void App::mouseMove_callback(double x, double y)
     mouseInput.update((float)x, (float)y);
 }
 
+void App::key_callback(int key, int action)
+{
+    if (action == GLFW_PRESS) 
+    {
+        switch(key) 
+        {
+            case GLFW_KEY_B:
+                cycleDebugView();
+                break;
+            case GLFW_KEY_D:
+                cycleLighting();
+                break;
+            case GLFW_KEY_T:
+                toggleLightTexture();
+                break;
+        }
+    }
+}
+
 void App::cycleDebugView() 
 {
     this->currentDebugView = (this->currentDebugView + 1) % 3 ;
@@ -92,16 +92,21 @@ void App::cycleDebugView()
         case WIRE_FRAME:
             std::cout << "- Debug Mode : WIRE_FRAME" << std::endl;
             this->shader = this->simpleShader;
+            shader->setInt("debugMode", this->currentDebugView);
             this->obj->IsWireframe = true;
+            this->obj2->IsWireframe = true;
             break;
         case NORMAL:
             std::cout << "- Debug Mode : NORMAL" << std::endl;
             this->shader = this->simpleShader;
+            shader->setInt("debugMode", this->currentDebugView);
             this->obj->IsWireframe = false;
+            this->obj2->IsWireframe = false;
             break;        
         case DIFFUSE:
             std::cout << "- Debug Mode : DIFFUSE" << std::endl;
-            this->shader = this->otherShader;
+            this->shader = this->simpleShader;
+            shader->setInt("debugMode", this->currentDebugView);
             break;
     }
 }
