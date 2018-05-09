@@ -17,7 +17,7 @@ public:
     ObjContainer(char* objFilePath);
     ~ObjContainer();
 
-    void Draw(int shaderID);
+    void Draw();
 
 private:
     std::vector<Shape> shapes;

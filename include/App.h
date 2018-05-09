@@ -21,14 +21,16 @@ private:
     int winX, winY;
 
     ObjectViewer *Camera;
-    glm::mat4 projection;
+    // glm::mat4 projection;
 
     Shader *simpleShader;
 
     ObjContainer *obj;
+    unsigned int VAO;
 
     void updateProjection();
     void setShaders();
+    void setVertices();
     void setBackgroundColour();
 };
 

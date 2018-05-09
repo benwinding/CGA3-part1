@@ -15,10 +15,10 @@ ObjContainer::ObjContainer(char* objFilePath) {
     this->loadModel(objFilePath);    
 }
 
-void ObjContainer::Draw(int shaderID) {
+void ObjContainer::Draw() {
     for (int i = 0; i < this->shapes.size(); ++i)
     {
-        this->shapes[i].Draw(shaderID);
+        this->shapes[i].Draw();
     }
 }
 
@@ -55,13 +55,13 @@ void ObjContainer::loadModel(char* objFilePath) {
  
     // Loop over shapes
     for (size_t s = 0; s < shapes.size(); s++) {
+        Shape currShape;
         // Loop over faces(polygon)
         size_t index_offset = 0;
         for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
             int fv = shapes[s].mesh.num_face_vertices[f];
-
-            std::vector<float> shapeVertices;
             // Loop over vertices in the face.
+            // Assumed 3 vertices to a FACE
             for (size_t v = 0; v < fv; v++) {
                 // access to vertex
                 tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
@@ -78,22 +78,13 @@ void ObjContainer::loadModel(char* objFilePath) {
                 // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
                 // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
 
-                shapeVertices.push_back(vx);
-                shapeVertices.push_back(vy);
-                shapeVertices.push_back(vz);
-                shapeVertices.push_back(nx);
-                shapeVertices.push_back(ny);
-                shapeVertices.push_back(nz);
-                shapeVertices.push_back(tx);
-                shapeVertices.push_back(ty);
+                currShape.AddVertex(vx,vy,vz,nx,ny,nz,tx,ty);
             }
             index_offset += fv;
-
-            // per-face material
-            int matId = shapes[s].mesh.material_ids[f];
-            Shape currentShape(matId, shapeVertices);
-            this->shapes.push_back(currentShape);
-            return;
         }
+        int matId = shapes[s].mesh.material_ids[0];
+        currShape.SetMatId(matId);
+        currShape.SetVertexBuffer();
+        this->shapes.push_back(currShape);
     }
 }

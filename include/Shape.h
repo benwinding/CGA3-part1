@@ -9,30 +9,29 @@
 
 #include <glm/glm.hpp>
 
-struct Vertex {
-    glm::vec3 Position;
-    glm::vec3 Normal;
-    glm::vec2 TexCoords;
-};
-
 class Shape
 {
 
 public:
-    Shape(size_t materialId, std::vector<float> vertices);
+    Shape();
     ~Shape();
 
-    void Draw(int shaderID);
-    size_t GetMaterialId();
+    void SetMatId(size_t matId);
+    void SetVertexBuffer();
+    void setVertices();
 
+    void Draw();
+    size_t GetMaterialId();
+    void AddVertex(float px, float py, float pz,
+                float nx, float ny, float nz,
+                float tx, float ty);
 private:
+    std::vector<float> vertices;
     void MakeCube(std::vector<float> &vertices);
-    GLuint VAO;
-    GLuint VBO;
-    GLuint EBO;
     
     int vertexCount;
     size_t materialId;
+    unsigned int VAO;
 
     void loadModel(char* filePath);
     void setVertexBuffers(std::vector<float> vertices);

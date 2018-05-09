@@ -12,30 +12,16 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#define GLM_FORCE_RADIANS // We must work in radians in newer versions of GLM...
 #include <glm/glm.hpp> // ...so now that's defined we can import GLM itself.
 #include "glm/gtc/matrix_transform.hpp" // Needed for the perspective() method
-// #include <glm/gtx/string_cast.hpp>
 
-
-// #include "glm/gtx/string_cast.hpp"
-// #include "glm/glm.hpp"
-// #include "glm/gtc/matrix_transform.hpp"
-// #include "glm/gtc/type_ptr.hpp"
-
-#include "Shader.h"
+#include "App.h"
 
 GLFWwindow* window;
 int winX = 640;
 int winY = 480;
 
-#define VALS_PER_VERT 3
-#define VALS_PER_COLOUR 4
-#define CUBE_NUM_TRIS 12      // number of triangles in a cube (2 per face)
-#define CUBE_NUM_VERTICES 8     // number of vertices in a cube`
-
-Shader* simpleShader;
-GLuint cubeVaoHandle;
+App* TheApp;
     
 void key_callback(GLFWwindow* window,
                   int key, int scancode, int action, int mods)
@@ -43,9 +29,16 @@ void key_callback(GLFWwindow* window,
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
+    TheApp->key_callback(key, action);
 }
 
 void error_callback(int error, const char* description){  std::cerr << description; }
+
+void windowResize_callback(GLFWwindow *window, int x, int y) 
+{
+    TheApp->SetWindowSize(x, y);
+    glViewport( 0, 0, x, y );
+}
 
 void initWindow() {
     glfwSetErrorCallback(error_callback);
@@ -78,8 +71,9 @@ void initWindow() {
         exit(1);
     }
 
-    // Set up callback functions and start our main loop
+    // Callback functions
     glfwSetKeyCallback(window, key_callback);
+    glfwSetFramebufferSizeCallback(window, windowResize_callback);
 }
 
 void initOpengl() {
@@ -89,128 +83,15 @@ void initOpengl() {
     glFrontFace(GL_CCW);
 }
 
-void setShaders() {
-    // Load shader and vertex data
-    simpleShader = new Shader("res/simple.vert", "res/simple.frag");
-}
-
-void createVAO() {
-    float Vertices[] = {
-        // Positions            // Normals           // Texture Coords
-        // far front
-        -1.0f, -1.0f, -1.0f,   0.0f,  0.0f, -1.0f,   0.0f,  0.0f, // 1
-        1.0f, -1.0f, -1.0f,   0.0f,  0.0f, -1.0f,   1.0f,  0.0f, // 2
-        1.0f,  1.0f, -1.0f,   0.0f,  0.0f, -1.0f,   1.0f,  1.0f, // 3
-        1.0f,  1.0f, -1.0f,   0.0f,  0.0f, -1.0f,   1.0f,  1.0f, // 3
-        -1.0f,  1.0f, -1.0f,   0.0f,  0.0f, -1.0f,   0.0f,  1.0f, // 4
-        -1.0f, -1.0f, -1.0f,   0.0f,  0.0f, -1.0f,   0.0f,  0.0f, // 1
-
-        // near front
-        1.0f,  -1.0f,  1.0f,   0.0f,  0.0f,  1.0f,   0.0f,  0.0f, // b
-        -1.0f, -1.0f,  1.0f,   0.0f,  0.0f,  1.0f,   1.0f,  0.0f, // a
-        -1.0f,  1.0f,  1.0f,   0.0f,  0.0f,  1.0f,   1.0f,  1.0f, // d
-        -1.0f,  1.0f,  1.0f,   0.0f,  0.0f,  1.0f,   1.0f,  1.0f, // d
-        1.0f,   1.0f,  1.0f,   0.0f,  0.0f,  1.0f,   0.0f,  1.0f, // c
-        1.0f,  -1.0f,  1.0f,   0.0f,  0.0f,  1.0f,   0.0f,  0.0f, // b
-
-        // left
-        -1.0f, -1.0f,  1.0f,   -1.0f,  0.0f,  0.0f,  0.0f,  0.0f, // a
-        -1.0f, -1.0f, -1.0f,   -1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // 1
-        -1.0f,  1.0f, -1.0f,   -1.0f,  0.0f,  0.0f,  1.0f,  1.0f, // 4
-        -1.0f,  1.0f, -1.0f,   -1.0f,  0.0f,  0.0f,  1.0f,  1.0f, // 4
-        -1.0f,  1.0f,  1.0f,   -1.0f,  0.0f,  0.0f,  0.0f,  1.0f, // d
-        -1.0f, -1.0f,  1.0f,   -1.0f,  0.0f,  0.0f,  0.0f,  0.0f, // a
-
-        // right
-        1.0f, -1.0f, -1.0f,    1.0f,  0.0f,  0.0f,   0.0f,  0.0f, // 2
-        1.0f, -1.0f,  1.0f,    1.0f,  0.0f,  0.0f,   1.0f,  0.0f, // b
-        1.0f,  1.0f,  1.0f,    1.0f,  0.0f,  0.0f,   1.0f,  1.0f, // c
-        1.0f,  1.0f,  1.0f,    1.0f,  0.0f,  0.0f,   1.0f,  1.0f, // c
-        1.0f,  1.0f, -1.0f,    1.0f,  0.0f,  0.0f,   0.0f,  1.0f, // 3
-        1.0f, -1.0f, -1.0f,    1.0f,  0.0f,  0.0f,   0.0f,  0.0f, // 2 
-
-        // floor
-        -1.0f, -1.0f, -1.0f,   0.0f, -1.0f,  0.0f,   0.0f,  1.0f, // 1
-        1.0f, -1.0f, -1.0f,   0.0f, -1.0f,  0.0f,   1.0f,  1.0f, // 2
-        1.0f, -1.0f,  1.0f,   0.0f, -1.0f,  0.0f,   1.0f,  0.0f, // b
-        1.0f, -1.0f,  1.0f,   0.0f, -1.0f,  0.0f,   1.0f,  0.0f,
-        -1.0f, -1.0f,  1.0f,   0.0f, -1.0f,  0.0f,   0.0f,  0.0f, // a
-        -1.0f, -1.0f, -1.0f,   0.0f, -1.0f,  0.0f,   0.0f,  1.0f,
-
-        //sky
-        -1.0f,  1.0f,  1.0f,   0.0f,  1.0f,  0.0f,   0.0f,  1.0f, // d
-        1.0f,  1.0f,  1.0f,   0.0f,  1.0f,  0.0f,   1.0f,  1.0f, // c
-        1.0f,  1.0f, -1.0f,   0.0f,  1.0f,  0.0f,   1.0f,  0.0f, // 3
-        1.0f,  1.0f, -1.0f,   0.0f,  1.0f,  0.0f,   1.0f,  0.0f, // 3
-        -1.0f,  1.0f, -1.0f,   0.0f,  1.0f,  0.0f,   0.0f,  0.0f, // 4
-        -1.0f,  1.0f,  1.0f,   0.0f,  1.0f,  0.0f,   0.0f,  1.0f  // d
-    };
-    glGenVertexArrays(1, &cubeVaoHandle);
-    glBindVertexArray(cubeVaoHandle);
-
-    unsigned int buffer;
-    glGenBuffers(1, &buffer);
-
-    // Set vertex attribute Postion
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(sizeof(GLfloat) * 0));
-
-    // Set vertex attribute Normal
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(sizeof(GLfloat) * 3));
-
-    // Set vertex attribute Texture Coordinates
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(sizeof(GLfloat) * 6));
-
-    // Un-bind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
-
-void setVertices() {
-    createVAO();
-}
-
-void render() {
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    simpleShader->use();
-    // Set Uniforms
-    glm::mat4 cameraMatrix;
-    cameraMatrix = glm::mat4(1.0f);
-    cameraMatrix = glm::translate(cameraMatrix, glm::vec3(0.0f, 0.0f, -5.0f));
-    simpleShader->setMat4("modelview_matrix", cameraMatrix);
-
-    simpleShader->use();
-    float aspect = (float) winX / winY;    
-    glm::mat4 projection;
-    projection = glm::mat4(1.0f);
-
-    projection = glm::perspective( (float)M_PI/4, aspect, 0.001f, 10.0f );
-    simpleShader->setMat4("projection_matrix", projection);        
-
-    glBindVertexArray(cubeVaoHandle);
-    glDrawArrays(GL_TRIANGLES, 0, CUBE_NUM_VERTICES);
-
-    glBindVertexArray(0);
-    glFlush();
-}
-
 int main(int argc, char **argv)
 {
     initWindow();
     initOpengl();
-    setShaders();
-    setVertices();
+    TheApp = new App(winX, winY, argv[1]);
 
     while (!glfwWindowShouldClose(window))
     {
-        render();
-
+        TheApp->render();
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
